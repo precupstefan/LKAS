@@ -1,5 +1,7 @@
+import cv2
 import numpy as np
 
+from config import config
 from utils.image_util import ImageUtil
 
 
@@ -14,30 +16,29 @@ class LaneDetection:
         :param frame: GRAYSCALE FRAME
         :return:
         """
-        frame = ImageUtil.convert_to_grayscale(frame)
-        frame = ImageUtil.apply_gaussian_blur(frame)
-        frame = ImageUtil.apply_threshold(frame)
-        frame = ImageUtil.apply_canny(frame)
+        frame = self.get_edges_in_frame(frame)
+        cv2.imshow('testing_lane', frame)
         frame = self.get_region_of_interest(frame)
         lanes = ImageUtil.get_lines_using_hough_transform(frame)
-        # return np.array(lanes)
         if lanes is None:
             return np.array([], [])
         smoothed_lanes = self.get_smoothed_lanes(frame, lanes)
         return smoothed_lanes, lanes
 
+    def get_edges_in_frame(self, frame):
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        frame = cv2.GaussianBlur(frame, tuple(config["LKAS"]["lanes_detection"]["gaussian_blur"]["kernel_size"]),
+                                 config["LKAS"]["lanes_detection"]["gaussian_blur"]["deviation"])
+        frame = cv2.adaptiveThreshold(frame, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY,
+                                      config["LKAS"]["lanes_detection"]["threshold"]["block_size"],
+                                      config["LKAS"]["lanes_detection"]["threshold"]["constant"])
+        frame = cv2.Canny(frame, config["LKAS"]["lanes_detection"]["canny"]["low_threshold"],
+                          config["LKAS"]["lanes_detection"]["canny"]["high_threshold"])
+        return frame
+
     def get_region_of_interest(self, frame):
-        height, width = frame.shape
-        point1_x = int(width / 8)
-        point2_x = width - point1_x
-        center_x = int(width / 2)
-        center_y = int(height * 0.6)  # 60% height retention
-        point1 = (point1_x, height)
-        point2 = (point2_x, height)
-        point3 = (int(center_x + 0.25 * center_x), center_y)
-        point4 = (int(center_x - 0.25 * center_x), center_y)
         polygons = np.array([
-            [point1, point2, point3, point4]
+            config["LKAS"]["lanes_detection"]["region_of_interest"]
         ])
         mask = np.zeros_like(frame)
         masked_image = ImageUtil.fill_poly(mask, polygons)

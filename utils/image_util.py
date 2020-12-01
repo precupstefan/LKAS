@@ -3,16 +3,20 @@ from abc import ABC
 import cv2
 import numpy as np
 
+from config import config
+
 
 class ImageUtil(ABC):
 
     @staticmethod
-    def apply_threshold(frame, threshold=128):
+    def apply_threshold(frame, block_size, constant):
         """
         Replace each pixel in an image with a black pixel if the image intensity is less than some fixed constant T,
         or a white pixel if the image intensity is greater than that constant
         """
-        ret, thresh = cv2.threshold(frame, 127, 255, cv2.THRESH_BINARY)
+        # ret, thresh = cv2.threshold(frame, 127, 255, cv2.THRESH_BINARY)
+        thresh = cv2.adaptiveThreshold(frame, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY,
+                                       block_size, constant)
         return thresh
 
     @staticmethod

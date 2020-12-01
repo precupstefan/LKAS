@@ -4,7 +4,6 @@ from logic.lane_detection import LaneDetection
 from utils.feed_streamer import FeedStreamer
 from utils.image_util import ImageUtil
 
-
 def ceva(frame):
     ceva= LaneDetection().detect_lanes(frame)
     if len(ceva) == 0:
@@ -34,5 +33,5 @@ def ceva(frame):
     cv2.imshow('testing', testing)
     return processed_frame
 
-
 FeedStreamer().play(ceva)
+
