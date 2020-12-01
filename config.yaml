@@ -1,18 +1,24 @@
 video:
   size: [ 640,480 ]
+  y_meters_per_pixel: 0.04166666666
+  x_meters_per_pixel: 0.00513888888
 LKAS:
   lanes_detection:
     region_of_interest:
-      - [ 75,480 ]
-      - [ 565,480 ]
-      - [ 400,300 ]
-      - [ 200,300 ]
+      - [ 75,480 ] #upperleft
+      - [ 565,480 ] #upperright
+      - [ 400,300 ] #lowerleft
+      - [ 200,300 ] #lowerright
     gaussian_blur: # noise reduction frame
+      active: true
       kernel_size: [ 5,5 ]
       deviation: 0
     threshold: # convert image to dark and white pixels using adaptiveThreshold
-      block_size: 3
-      constant: 2
+      active: true
+      adaptive: false
+      threshold: 150 # min pixel intensity to be considered white
+      block_size: 3 # for adaptive threshold
+      constant: 2 # for adaptive threshold
     canny: # identifies edges/ lines comparing contrast
       low_threshold: 50
       high_threshold: 150
@@ -22,3 +28,18 @@ LKAS:
       threshold: 40 # minimum points required to intersect to describe a line
       min_line_length: 25 # px
       max_line_gap: 70 #px
+    warp_perspective:
+      src:
+        - [ 200,280 ] #upperleft
+        - [ 400,280 ] #upperright
+        - [ 75,480 ] #lowerleft
+        - [ 565,480 ] #lowerright
+      dst:
+        - [ 0, 0 ]
+        - [ 639, 0 ]
+        - [ 0, 479 ]
+        - [ 639, 479 ]
+    colour_filtering:
+      active: true
+      lower_white: [ 0, 160, 10 ] #HLS
+      upper_white: [ 255, 255, 255 ] #HLS

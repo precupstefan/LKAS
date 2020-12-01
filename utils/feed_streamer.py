@@ -1,3 +1,5 @@
+import os
+
 import cv2
 import pafy
 
@@ -5,11 +7,14 @@ from config import config
 
 feed = "rbe-cT12ljs"
 feed = "n7zuQM6aPqg"
-feed = "vjdrU_WOg54" #feed 4k destul de bun
-# feed = "ydvsyAZbuSQ"
+# feed = "vjdrU_WOg54"  # feed 4k destul de bun
+feed = "ydvsyAZbuSQ"
 
 # feed ="3y5aRJLDeB4" # un video bunicel da e groaznic
-feed = "c3Q_vHeZT1w"
+# feed = "c3Q_vHeZT1w"
+
+feedfile = os.path.join(os.getcwd(), 'drive.mp4')
+
 
 class FeedStreamer:
 
@@ -19,7 +24,7 @@ class FeedStreamer:
 
     def play(self, callback):
         capture_device = cv2.VideoCapture(self.video.url)
-
+        # capture_device = cv2.VideoCapture(feedfile)
         skip_frames = 3000
         for _ in range(skip_frames):
             capture_device.read()
