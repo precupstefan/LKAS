@@ -1,7 +1,9 @@
 video:
   size: [ 640,480 ]
-  y_meters_per_pixel: 0.04166666666
-  x_meters_per_pixel: 0.00513888888
+  track_width: 35cm=0.35/ 50-600
+  dashed_markings: 4.5cm=0.045/ 426-462
+  y_meters_per_pixel: 0.00063636363 # 35cm in 550px
+  x_meters_per_pixel: 0.00125
 LKAS:
   lanes_detection:
     region_of_interest:
@@ -30,16 +32,16 @@ LKAS:
       max_line_gap: 70 #px
     warp_perspective:
       src:
-        - [ 200,280 ] #upperleft
-        - [ 400,280 ] #upperright
-        - [ 75,480 ] #lowerleft
-        - [ 565,480 ] #lowerright
+        - [ 100,200 ] #upperleft
+        - [ 540,200 ] #upperright
+        - [ 0.,479 ] #lowerleft
+        - [ 639,479 ] #lowerright
       dst:
         - [ 0, 0 ]
         - [ 639, 0 ]
         - [ 0, 479 ]
         - [ 639, 479 ]
     colour_filtering:
-      active: true
+      active: false
       lower_white: [ 0, 160, 10 ] #HLS
       upper_white: [ 255, 255, 255 ] #HLS

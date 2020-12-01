@@ -1,12 +1,10 @@
-from abc import ABC
 
 import cv2
 import numpy as np
 
-from config import config
 
 
-class ImageUtil(ABC):
+class ImageUtil():
 
     @staticmethod
     def apply_threshold(frame, block_size, constant):

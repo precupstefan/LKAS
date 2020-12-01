@@ -1,8 +1,8 @@
 import cv2
 import numpy as np
 
-from config import config
-from utils.image_util import ImageUtil
+from LKAS.config import config
+from LKAS.utils.image_util import ImageUtil
 
 
 class LaneDetection:

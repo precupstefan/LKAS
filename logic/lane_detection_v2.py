@@ -1,16 +1,17 @@
 import cv2
 import numpy as np
 
-from config import config
+from LKAS.config import config
 
 
 class LaneDetection:
-
     ym_per_pix = config["video"]["y_meters_per_pixel"]
     xm_per_pix = config["video"]["x_meters_per_pixel"]
 
     def __init__(self):
         self.original_frame = None
+        self.warped_frame = None
+        self.canny_frame = None
         self.sliding_window_frame = None
         self.im_pillpoly = None
         self.im_newwarp = None
@@ -19,7 +20,8 @@ class LaneDetection:
     def detect_lanes(self, frame):
         self.original_frame = frame
         stuff = self.warp_perspective(frame)
-        hls_frame, gray_frame, blurred_frame, thresh_frame, canny_frame = self.get_edges_in_frame(stuff[0])
+        self.warped_frame = stuff[0]
+        hls_frame, gray_frame, blurred_frame, thresh_frame, self.canny_frame = self.get_edges_in_frame(stuff[0])
         histogram, left_lane, right_lane = self.compute_histogram(thresh_frame)
         ploty, left_fit, right_fit, left_fitx, right_fitx = self.slide_window_search(thresh_frame, histogram)
         draw_info = self.general_search(thresh_frame, left_fit, right_fit)
@@ -234,7 +236,8 @@ class LaneDetection:
         right_fit_cr = np.polyfit(ploty * self.ym_per_pix, rightx * self.xm_per_pix, 2)
 
         # Calculate the new radii of curvature
-        left_curverad = ((1 + (2 * left_fit_cr[0] * y_eval * self.ym_per_pix + left_fit_cr[1]) ** 2) ** 1.5) / np.absolute(
+        left_curverad = ((1 + (
+                2 * left_fit_cr[0] * y_eval * self.ym_per_pix + left_fit_cr[1]) ** 2) ** 1.5) / np.absolute(
             2 * left_fit_cr[0])
         right_curverad = ((1 + (
                 2 * right_fit_cr[0] * y_eval * self.ym_per_pix + right_fit_cr[1]) ** 2) ** 1.5) / np.absolute(
@@ -288,3 +291,19 @@ class LaneDetection:
         deviation = pixelDeviation * self.xm_per_pix
         direction = "left" if deviation < 0 else "right"
         return deviation, direction
+
+    def build_status_image(self, size=(720, 1080)):
+        layout = np.array((2, 3))
+        size = np.array(size)
+        frame_dimension = size / layout
+        image = np.zeros(np.append(size, 3), np.uint8)
+        warped_img = cv2.resize(self.warped_frame, tuple(frame_dimension))  # Resize image)
+        image[0:frame_dimension[1], 0:frame_dimension[0]] = warped_img
+        canny_image = cv2.resize(self.canny_frame, tuple(frame_dimension))  # Resize image)
+        canny_image = cv2.cvtColor(canny_image, cv2.COLOR_GRAY2BGR)
+        image[0:frame_dimension[1], frame_dimension[0]:frame_dimension[0] * 2] = canny_image
+        sliding_window_frame = cv2.resize(self.sliding_window_frame, tuple(frame_dimension))  # Resize image)
+        image[0:frame_dimension[1], frame_dimension[0] * 2:frame_dimension[0]*3] = sliding_window_frame
+        im_pillpoly = cv2.resize(self.im_pillpoly, tuple(frame_dimension))  # Resize image)
+        image[frame_dimension[1]:frame_dimension[1]*2, 0:frame_dimension[0]] = im_pillpoly
+        return image

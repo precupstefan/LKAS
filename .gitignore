@@ -6,3 +6,7 @@ utils/__pycache__/
 logic/__pycache__/
 
 config/__pycache__/
+
+__init__.pyc
+
+*.pyc
