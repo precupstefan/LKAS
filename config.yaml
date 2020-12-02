@@ -7,10 +7,10 @@ video:
 LKAS:
   lanes_detection:
     region_of_interest:
-      - [ 75,480 ] #upperleft
-      - [ 565,480 ] #upperright
-      - [ 400,300 ] #lowerleft
-      - [ 200,300 ] #lowerright
+      - [ 100,200 ] #upperleft
+      - [ 600,200 ] #upperright
+      - [ 639,479 ] #lowerright
+      - [ 0,479 ] #lowerleft
     gaussian_blur: # noise reduction frame
       active: true
       kernel_size: [ 5,5 ]
@@ -28,13 +28,13 @@ LKAS:
       rho: 2
       thetha: 0.01745329251 # ( pi/180)
       threshold: 40 # minimum points required to intersect to describe a line
-      min_line_length: 25 # px
+      min_line_length: 10 # px
       max_line_gap: 70 #px
     warp_perspective:
       src:
         - [ 100,200 ] #upperleft
-        - [ 540,200 ] #upperright
-        - [ 0.,479 ] #lowerleft
+        - [ 600,200 ] #upperright
+        - [ 0,479 ] #lowerleft
         - [ 639,479 ] #lowerright
       dst:
         - [ 0, 0 ]

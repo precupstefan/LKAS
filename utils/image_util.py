@@ -22,7 +22,7 @@ class ImageUtil():
         return cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
     @staticmethod
-    def get_lines_using_hough_transform(frame, ):
+    def get_lines_using_hough_transform(frame):
         # TODO: Tune this parameters for better line detection
         return cv2.HoughLinesP(frame, rho=2, theta=np.pi / 180, threshold=40, minLineLength=25, maxLineGap=70)
 
@@ -35,7 +35,7 @@ class ImageUtil():
         return cv2.Canny(frame, low_threshold, high_threshold)
 
     @staticmethod
-    def fill_poly(frame, polygon, intensity=255):
+    def fill_poly(frame, polygon, intensity=(255,255,255)):
         return cv2.fillPoly(frame, polygon, intensity)
 
     @staticmethod
