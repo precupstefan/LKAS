@@ -32,8 +32,8 @@ LKAS:
       max_line_gap: 70 #px
     warp_perspective:
       src:
-        - [ 100,200 ] #upperleft
-        - [ 600,200 ] #upperright
+        - [ 160,250 ] #upperleft
+        - [ 480,250 ] #upperright
         - [ 0,479 ] #lowerleft
         - [ 639,479 ] #lowerright
       dst:
@@ -45,3 +45,6 @@ LKAS:
       active: false
       lower_white: [ 0, 160, 10 ] #HLS
       upper_white: [ 255, 255, 255 ] #HLS
+    others:
+      line_marking_width: 0.02 #2cm
+      slope_difference: 0.1
