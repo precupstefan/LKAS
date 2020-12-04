@@ -3,12 +3,18 @@ import numpy as np
 import warnings
 
 from LKAS.config import config
+from LKAS.models.direction import Direction
+from LKAS.models.line import Line
 from LKAS.utils.image_util import apply_bitwise_and, fill_poly, warp_perspective
 
 
 class LaneDetection:
     # https://www.youtube.com/watch?v=eLTLtUVuuy4
     def __init__(self):
+
+        self.right_lane = Line()
+        self.left_lane = Line()
+
         self.original_image = None
         self.canny_image = None
         self.region_of_interest = None
@@ -23,27 +29,21 @@ class LaneDetection:
         """
         DETECTS LANES
         :param frame: GRAYSCALE FRAME
-        :return:
+        :return: (Line, Line) left and right lane
         """
         self.original_image = frame.copy()
         self.warped_perspective, self.inverse_matrix = warp_perspective(frame)
         hls_frame, gray_frame, blurred_frame, thresh_frame, cannyframe = self.get_edges_in_frame(
             self.warped_perspective)
-        left_lane, right_lane, self.sliding_window_image = self.determine_lines_using_sliding_window(
+        self.sliding_window_image = self.determine_lines_using_sliding_window(
             thresh_frame)
-        detected_line_on_image = self.draw_detected_lines_on_image(self.warped_perspective, (left_lane, right_lane))
+
+        detected_line_on_image = self.draw_detected_lines_on_image(self.warped_perspective)
         cv2.imshow("perspective", self.warped_perspective)
         cv2.imshow("sliding_window_image", self.sliding_window_image)
         cv2.imshow("detected_line_on_image", detected_line_on_image)
 
-        # self.canny_image = self.get_edges_in_frame(self.warped_perspective)
-        # # self.region_of_interest = self.get_region_of_interest(self.canny_image)
-        # self.lines = cv2.HoughLinesP(self.canny_image, rho=2, theta=np.pi / 180, threshold=40, minLineLength=25,
-        #                              maxLineGap=70)
-        # if self.lines is None:
-        #     return np.array([], [])
-        # self.smoothed_lanes = self.get_smoothed_lanes(frame, self.lines)
-        return self.smoothed_lanes
+        return self.left_lane, self.right_lane
 
     def get_edges_in_frame(self, frame):
         hls_frame = gray_frame = blurred_frame = thresh_frame = canny_frame = None
@@ -76,8 +76,7 @@ class LaneDetection:
                                 config["LKAS"]["lanes_detection"]["canny"]["high_threshold"])
         return hls_frame, gray_frame, blurred_frame, thresh_frame, canny_frame
 
-    @staticmethod
-    def determine_lines_using_sliding_window(img):
+    def determine_lines_using_sliding_window(self, img):
 
         ### Settings
         # Choose the number of sliding windows
@@ -150,33 +149,74 @@ class LaneDetection:
         rightx = nonzerox[right_lane_inds]
         righty = nonzeroy[right_lane_inds]
 
-        # Fit a second order polynomial to each
-        left_fit = np.polyfit(lefty, leftx, 2)
-        right_fit = np.polyfit(righty, rightx, 2)
+        ym_per_pix = config["video"]["y_meters_per_pixel"]
+        xm_per_pix = config["video"]["x_meters_per_pixel"]
 
         # Fit a second order polynomial to each
-        # left_fit_m = np.polyfit(lefty * ym_per_pix, leftx * xm_per_pix, 2)
-        # right_fit_m = np.polyfit(righty * ym_per_pix, rightx * xm_per_pix, 2)
+        if leftx.size != 0 and lefty.size != 0:
+            left_fit = np.polyfit(lefty, leftx, 2)
+            left_fit_m = np.polyfit(lefty * ym_per_pix, leftx * xm_per_pix, 2)
+        else:
+            left_fit = np.array([])
+            left_fit_m = np.array([])
+
+        if rightx.size != 0 and righty.size != 0:
+            right_fit = np.polyfit(righty, rightx, 2)
+            right_fit_m = np.polyfit(righty * ym_per_pix, rightx * xm_per_pix, 2)
+        else:
+            right_fit = np.array([])
+            right_fit_m = np.array([])
 
         out_img[nonzeroy[left_lane_inds], nonzerox[left_lane_inds]] = [255, 0, 0]
         out_img[nonzeroy[right_lane_inds], nonzerox[right_lane_inds]] = [0, 0, 255]
 
-        return left_fit, right_fit, out_img
+        diff = config["LKAS"]["lanes_detection"]["others"]["orientation_pixel_difference"]
 
-    def draw_detected_lines_on_image(self, frame, lines):
-        left_fit, right_fit = lines
+        # if leftx[0] - leftx[-1] < diff:
+        #     left_direction = Direction.LEFT
+        #
+        # elif leftx[0] - leftx[-1] > diff:
+        #     left_direction = Direction.RIGHT
+        # else:
+        #     left_direction = Direction.STRAIGHT
+        #
+        # d = rightx[0] - rightx[-1]
+        # if d < diff:
+        #     right_direction = Direction.RIGHT
+        #
+        # elif d > diff:
+        #     right_direction = Direction.LEFT
+        # else:
+        #     right_direction = Direction.STRAIGHT
+
+        self.left_lane.set_parameters(left_fit, left_fit_m)
+        self.right_lane.set_parameters(right_fit, right_fit_m)
+
+        return out_img
+
+    def draw_detected_lines_on_image(self, frame):
+        left_fit, right_fit = self.left_lane.line_fit, self.right_lane.line_fit
+
         ploty = np.linspace(0, frame.shape[0] - 1, frame.shape[0]).astype("int")
-        left_fitx = np.array(left_fit[0] * ploty ** 2 + left_fit[1] * ploty + left_fit[2]).astype("int")
-        right_fitx = np.array(right_fit[0] * ploty ** 2 + right_fit[1] * ploty + right_fit[2]).astype("int")
-        left_lane = np.vstack((ploty, left_fitx))
-        left_lane = left_lane[:, left_lane[-1, :] < frame.shape[1]]
-        right_lane = np.vstack((ploty, right_fitx))
-        right_lane = right_lane[:, right_lane[-1, :] < frame.shape[1]]
-        left_lane = np.transpose(left_lane)[:, ::-1]
-        right_lane = np.transpose(right_lane)[:, ::-1]
 
-        poly = np.vstack((left_lane, np.flipud(right_lane)))
-        cv2.fillPoly(frame, [poly], (0, 255, 0))
+        left_lane = np.empty((0,2))
+        right_lane = np.empty((0,2))
+
+        if left_fit.size != 0:
+            left_fitx = np.array(left_fit[0] * ploty ** 2 + left_fit[1] * ploty + left_fit[2]).astype("int")
+            left_lane = np.vstack((ploty, left_fitx))
+            left_lane = left_lane[:, left_lane[-1, :] < frame.shape[1]]
+            left_lane = np.transpose(left_lane)[:, ::-1]
+
+        if right_fit.size != 0:
+            right_fitx = np.array(right_fit[0] * ploty ** 2 + right_fit[1] * ploty + right_fit[2]).astype("int")
+            right_lane = np.vstack((ploty, right_fitx))
+            right_lane = right_lane[:, right_lane[-1, :] < frame.shape[1]]
+            right_lane = np.transpose(right_lane)[:, ::-1]
+
+        poly = np.vstack((left_lane, np.flipud(right_lane))).astype("int")
+        if poly.size !=0:
+            cv2.fillPoly(frame, [poly], (0, 255, 0))
         # cv2.fillPoly(frame, [right_lane], (0, 255, 0))
 
         # frame[left_lane[0], left_lane[1]] = [0, 255, 0]

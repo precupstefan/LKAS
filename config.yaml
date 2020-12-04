@@ -2,8 +2,8 @@ video:
   size: [ 640,480 ]
   track_width: 35cm=0.35/ 50-600
   dashed_markings: 4.5cm=0.045/ 426-462
-  y_meters_per_pixel: 0.00063636363 # 35cm in 550px
-  x_meters_per_pixel: 0.00125
+  y_meters_per_pixel: 0.00125 # 30cm in 145px valori posibile pt y: 0.00125 / 0.00206896551
+  x_meters_per_pixel: 0.00059523809 # 35 cm in 588 px . val possibile : 0.00125 / 0.00059523809
 LKAS:
   lanes_detection:
     region_of_interest:
@@ -32,8 +32,8 @@ LKAS:
       max_line_gap: 70 #px
     warp_perspective:
       src:
-        - [ 160,250 ] #upperleft
-        - [ 480,250 ] #upperright
+        - [ 30,250 ] #upperleft
+        - [ 610,250 ] #upperright
         - [ 0,479 ] #lowerleft
         - [ 639,479 ] #lowerright
       dst:
@@ -47,4 +47,5 @@ LKAS:
       upper_white: [ 255, 255, 255 ] #HLS
     others:
       line_marking_width: 0.02 #2cm
-      slope_difference: 0.1
+      slope_difference: 4
+      orientation_pixel_difference : 4
