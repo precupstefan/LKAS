@@ -10,31 +10,61 @@ class Trajectory:
     def __init__(self):
         pass
 
-    def compute_trajectory(self, left_line, right_line):
+    def compute_trajectory(self, lane):
         """
         Returns the curvature in degrees
         """
+        left_line = lane.left_line
+        right_line = lane.right_line
         left_curvature = left_line.curvature_radius
         right_curvature = right_line.curvature_radius
 
         if left_curvature is None and right_curvature is None:
             return None
 
+        point_of_interest = 0
         if left_curvature is None and right_curvature is not None:
             avg_curvature_radius = right_curvature
-            m_avg = right_line.get_slope(320)
+            m_avg = right_line.get_slope_m(point_of_interest)
 
         if left_curvature is not None and right_curvature is None:
             avg_curvature_radius = left_curvature
-            m_avg = left_line.get_slope(320)
+            m_avg = left_line.get_slope_m(point_of_interest)
 
         if left_curvature is not None and right_curvature is not None:
             avg_curvature_radius = np.average([left_curvature, right_curvature])
-            left_orientation = left_line.get_slope(320)
-            right_orientation = right_line.get_slope(320)
-            m_avg = left_orientation + right_orientation
+            left_orientation = left_line.get_slope_m(point_of_interest)
+            right_orientation = right_line.get_slope_m(point_of_interest)
+            m_avg = (left_orientation + right_orientation) / 2
+
+        off_center = lane.get_off_center_of_lane()
 
         print("curvature", avg_curvature_radius)
+        print("deviation", off_center)
+
+        real_curvature = avg_curvature_radius + off_center
+        print("real curvature", real_curvature)
+
+        degrees = np.degrees(real_curvature)
+
+        print("degrees", degrees % 90)
+        print("m_avg", m_avg)
+        print("theta", np.arctan(m_avg), np.rad2deg(np.arctan(m_avg)))
+        return np.rad2deg(np.arctan(m_avg))*-1
+        if m_avg > 0:
+            orientation = Direction.RIGHT.value
+        elif m_avg < 0:
+            orientation = Direction.LEFT.value
+        else:
+            orientation = 0
+        return degrees * orientation
+
+        # tan(f_steerAngle_deg / 180.0 * PI)
+
+        ######
+        # V2
+        ######
+
         X = avg_curvature_radius
         if avg_curvature_radius < 15:
             angle = 0.17198 * (X ** 2) - 4.844 * X + 29.1965

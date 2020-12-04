@@ -11,6 +11,8 @@ class Line:
     curvature_radius = 0
     orientation = 0
 
+    # line_fit represents parametric ecuation for pixels
+    # line_fit_m represents parametric equation for meters
     def set_parameters(self, line_fit, line_fit_m):
         self.line_fit = line_fit
         self.line_fit_m = line_fit_m
@@ -38,32 +40,22 @@ class Line:
             curve_rad = None
         self.curvature_radius = curve_rad
 
-    def get_x_given_y(self, y):
+    def get_fit_x(self, y):
+        """
+        y is a np.array
+        @returns np.array
+        """
         if self.line_fit_m.size ==0:
-            return None
-        return self.line_fit_m[0] * y ** 2 + self.line_fit_m[1] * y + self.line_fit_m[2]
-
-    def get_orientation(self):
-        if self.line_fit_m.size == 0:
-            return None
-        y1 = 0
-        x1 = self.get_x_given_y(y1)
-        y2 = config["video"]["size"][1] - 1
-        x2 = self.get_x_given_y(y2)
-        slope, intercept = np.polyfit((x1, x2), (y1, y2), 1)
-        return slope
+            return np.empty(y.shape)
+        fit = self.line_fit
+        return np.array(fit[0] * y ** 2 + fit[1] * y + fit[2]).astype("int")
 
     def get_angle(self, x):
         # see https://www.youtube.com/watch?v=uVLWZCPwTh8 for more info
-        m = self.get_slope(x)
+        m = self.get_slope_m(x)
         return np.arctan(m) if m else None
 
-    def get_slope(self, x):
+    def get_slope_m(self, x):
         if self.line_fit_m.size == 0:
             return None
-
-        f = lambda y: self.line_fit[0] * y ** 2 + self.line_fit[1] * y + self.line_fit[2]
-        y1 = 240
-        x1 = f(y1)
-        x = x1
         return 2 * self.line_fit_m[0] * x + self.line_fit_m[1]
