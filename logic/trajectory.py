@@ -22,20 +22,30 @@ class Trajectory:
         if left_curvature is None and right_curvature is None:
             return None
 
+        direction = None
         point_of_interest = 0
         if left_curvature is None and right_curvature is not None:
             avg_curvature_radius = right_curvature
             m_avg = right_line.get_slope_m(point_of_interest)
+            direction = Direction.LEFT if m_avg >0 else Direction.RIGHT
 
         if left_curvature is not None and right_curvature is None:
             avg_curvature_radius = left_curvature
             m_avg = left_line.get_slope_m(point_of_interest)
+            direction = Direction.RIGHT if m_avg >0 else Direction.LEFT
 
         if left_curvature is not None and right_curvature is not None:
             avg_curvature_radius = np.average([left_curvature, right_curvature])
             left_orientation = left_line.get_slope_m(point_of_interest)
             right_orientation = right_line.get_slope_m(point_of_interest)
             m_avg = (left_orientation + right_orientation) / 2
+            slope_threshold = config["LKAS"]["lanes_detection"]["others"]["slope_difference"]
+            if m_avg > slope_threshold:
+                direction = Direction.RIGHT
+            elif m_avg < 0:
+                direction = Direction.LEFT
+            else:
+                direction = Direction.STRAIGHT
 
         off_center = lane.get_off_center_of_lane()
 
@@ -43,20 +53,27 @@ class Trajectory:
         print("deviation", off_center)
 
         real_curvature = avg_curvature_radius + off_center
+        steering_value  = direction.value * m_avg + off_center
         print("real curvature", real_curvature)
 
         degrees = np.degrees(real_curvature)
 
+        # if m_avg > 0:
+        #     orientation = Direction.RIGHT.value
+        # elif m_avg < 0:
+        #     orientation = Direction.LEFT.value
+        # else:
+        #     orientation = 0
+
         print("degrees", degrees % 90)
         print("m_avg", m_avg)
-        print("theta", np.arctan(m_avg), np.rad2deg(np.arctan(m_avg)))
-        return np.rad2deg(np.arctan(m_avg))*-1
-        if m_avg > 0:
-            orientation = Direction.RIGHT.value
-        elif m_avg < 0:
-            orientation = Direction.LEFT.value
-        else:
-            orientation = 0
+        print("theta", np.arctan(m_avg) * -1, np.rad2deg(np.arctan(m_avg)) * -1)
+        print("theta_deviation", np.arctan(off_center), np.rad2deg(np.arctan(off_center)))
+        print("sum_theta", np.rad2deg(np.arctan(m_avg)) * -1 + np.rad2deg(np.arctan(off_center)))
+        print("theta = m_avg+dev", np.rad2deg(np.arctan(steering_value)))
+        return np.rad2deg(np.arctan(steering_value))
+        return np.rad2deg(np.arctan(m_avg)) * -1 + np.rad2deg(np.arctan(off_center)) * direction.value
+        return np.rad2deg(np.arctan(m_avg)) * -1
         return degrees * orientation
 
         # tan(f_steerAngle_deg / 180.0 * PI)

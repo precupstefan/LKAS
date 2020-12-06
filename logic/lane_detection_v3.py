@@ -14,8 +14,8 @@ class LaneDetection:
     def __init__(self):
 
         self.lane = Lane()
-        self.right_lane = self.lane.left_line
-        self.left_lane = self.lane.right_line
+        self.left_line = self.lane.left_line
+        self.right_line = self.lane.right_line
 
         self.original_image = None
         self.canny_image = None
@@ -171,8 +171,8 @@ class LaneDetection:
             right_fit = np.array([])
             right_fit_m = np.array([])
 
-        out_img[nonzeroy[left_lane_inds], nonzerox[left_lane_inds]] = [255, 0, 0]
-        out_img[nonzeroy[right_lane_inds], nonzerox[right_lane_inds]] = [0, 0, 255]
+        out_img[nonzeroy[left_lane_inds], nonzerox[left_lane_inds]] = [255, 0, 0] #blue
+        out_img[nonzeroy[right_lane_inds], nonzerox[right_lane_inds]] = [0, 0, 255] #red
 
         diff = config["LKAS"]["lanes_detection"]["others"]["orientation_pixel_difference"]
 
@@ -193,15 +193,15 @@ class LaneDetection:
         # else:
         #     right_direction = Direction.STRAIGHT
 
-        self.left_lane.set_parameters(left_fit, left_fit_m)
-        self.right_lane.set_parameters(right_fit, right_fit_m)
+        self.left_line.set_parameters(left_fit, left_fit_m)
+        self.right_line.set_parameters(right_fit, right_fit_m)
 
         return out_img
 
     def draw_poly_from_lines_on_image(self, frame):
 
         frame = frame[:, ].copy()
-        left_fit, right_fit = self.left_lane.line_fit, self.right_lane.line_fit
+        left_fit, right_fit = self.left_line.line_fit, self.right_line.line_fit
 
         ploty = np.linspace(0, frame.shape[0] - 1, frame.shape[0]).astype("int")
 
@@ -212,13 +212,13 @@ class LaneDetection:
         left_fitx = np.array(ploty.shape)
 
         if left_fit.size != 0:
-            left_fitx = self.left_lane.get_fit_x(ploty)
+            left_fitx = self.left_line.get_fit_x(ploty)
             left_lane = np.vstack((ploty, left_fitx))
             left_lane = left_lane[:, left_lane[-1, :] < frame.shape[1]]
             left_lane = np.transpose(left_lane)[:, ::-1]
 
         if right_fit.size != 0:
-            right_fitx = self.right_lane.get_fit_x(ploty)
+            right_fitx = self.right_line.get_fit_x(ploty)
             right_lane = np.vstack((ploty, right_fitx))
             right_lane = right_lane[:, right_lane[-1, :] < frame.shape[1]]
             right_lane = np.transpose(right_lane)[:, ::-1]
