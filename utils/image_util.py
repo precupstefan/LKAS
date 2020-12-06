@@ -95,3 +95,8 @@ def warp_perspective(frame):
     matrix = cv2.getPerspectiveTransform(src, dst)
     m_inv = cv2.getPerspectiveTransform(dst, src)
     return cv2.warpPerspective(frame, matrix, img_size), m_inv
+
+
+def draw_points(frame, points, color):
+    for point in points:
+        cv2.circle(frame, tuple(point), radius=2, color=color, thickness=-1)

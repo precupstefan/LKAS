@@ -7,13 +7,14 @@ from LKAS.models.direction import Direction
 from LKAS.models.lane import Lane
 from LKAS.models.line import Line
 from LKAS.utils.image_util import apply_bitwise_and, fill_poly, warp_perspective
+from LKAS.utils.lane_util import draw_lane_info_on_perspective_image
 
 
 class LaneDetection:
     # https://www.youtube.com/watch?v=eLTLtUVuuy4
     def __init__(self):
-
-        self.lane = Lane()
+        frame_height = config["video"]["size"][1]
+        self.lane = Lane(frame_height)
         self.left_line = self.lane.left_line
         self.right_line = self.lane.right_line
 
@@ -44,6 +45,7 @@ class LaneDetection:
         cv2.imshow("perspective", self.warped_perspective)
         cv2.imshow("sliding_window_image", self.sliding_window_image)
         cv2.imshow("detected_line_on_image", detected_line_on_image)
+        cv2.imshow("ceva", draw_lane_info_on_perspective_image(self.lane, self.warped_perspective))
 
         return self.lane
 
@@ -171,8 +173,8 @@ class LaneDetection:
             right_fit = np.array([])
             right_fit_m = np.array([])
 
-        out_img[nonzeroy[left_lane_inds], nonzerox[left_lane_inds]] = [255, 0, 0] #blue
-        out_img[nonzeroy[right_lane_inds], nonzerox[right_lane_inds]] = [0, 0, 255] #red
+        out_img[nonzeroy[left_lane_inds], nonzerox[left_lane_inds]] = [255, 0, 0]  # blue
+        out_img[nonzeroy[right_lane_inds], nonzerox[right_lane_inds]] = [0, 0, 255]  # red
 
         diff = config["LKAS"]["lanes_detection"]["others"]["orientation_pixel_difference"]
 

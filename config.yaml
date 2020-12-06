@@ -47,5 +47,5 @@ LKAS:
       upper_white: [ 255, 255, 255 ] #HLS
     others:
       line_marking_width: 0.02 #2cm
-      slope_difference: 4
+      slope_difference: 0.1
       orientation_pixel_difference : 4
